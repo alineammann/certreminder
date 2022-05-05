@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% block title %}Show Upload{% endblock %}
+{% block body %}
+{{ obj }}
+{% include 'navbar.html' %}
+    <ul>
+        <li>
+            {{certificate.serial_number}}
+        </li>
+    </ul>
+
+{% endblock %}

@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% block title %}Home{% endblock %}
+{% block body %}
+{{ obj }}
+<h1>Your Certificates</h1>
+<ol>{% for r in reminders %}
+    <li>
+        <form action="{% url 'delete_reminder' reminderId=r.id %}" method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <h3>{{r.certificate.common_name}}</h3>
+        {{r.certificate.serialnumber}} <br>
+        {{r.certificate.expiration_date}}<br>
+        {{r.get_status}}
+        <input type="submit" value="Delete">
+      </form>
+    </li>
+{% endfor %}</ol>
+{% endblock %}

@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+    <head>
+    </head>
+    <body>
+          {% if user.is_authenticated %}
+            You are logged in {{ user.username }}!
+            <button><a href="{% url 'logout' %}">Log Out</a></button>
+            <button><a href="{% url 'login' %}">Log In</a></button>
+          {% else %}
+            <button><a href="{% url 'login' %}">Log In</a></button>
+            <button><a href="{% url 'signup' %}">Sign Up</a></button>
+          {% endif %}
+          </div>
+          <hr />
+    </body>
+</html>

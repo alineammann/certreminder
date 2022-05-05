@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% block title %}Sign Up{% endblock %}
+{% block body %}
+{{ obj }}
+    {% if error %}
+    <p><strong>Invalid email or password</strong></p>
+    {% endif %}
+    <h2>Log in</h2>
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{form.as_p}}
+        <input type="submit" value="Log In">
+        <a href="{% url 'password_reset' %}">Forgot Password</a>
+    </form>
+    
+{% endblock %}
