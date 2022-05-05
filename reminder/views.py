@@ -33,13 +33,13 @@ def upload_certificate(request):
             ed = ed_dt.strftime("%Y-%m-%d")
             certificate = Certificate.objects.create(common_name = cn, serialnumber = sn, expiration_date = ed)
             certificate.save()
-            return redirect('show_certificate', certId = certificate.id)
+            return redirect('show_certificate', certUid = certificate.uid)
         except Exception as e:
             error = str(e)
     return render(request, 'reminder/upload.html', {'form':form, 'error':error})
 
-def show_certificate(request, certId):
-    cert = Certificate.objects.filter(id=certId).first()
+def show_certificate(request, certUid):
+    cert = Certificate.objects.filter(uid = certUid).first()
     emailInput = EmailInput(request.POST or None)
     if request.method == 'POST':
         email = str(request.POST['email'])
@@ -60,25 +60,28 @@ def show_certificate(request, certId):
             }
     return HttpResponse(template.render(context, request))
 
-def settings(response, uid):
+def settings(request, uid):
     cert = Certificate.objects.filter(uid = uid).first()
     reminder = Reminder.objects.filter(certificate = cert.id).first()
     settingInput = SettingInput(initial={'days_until_expiration': reminder.days_until_expiration, 'message': reminder.message})
 
-    if response.method == 'POST':
-        new_days_until_expiration = int(response.POST['days_until_expiration'])
-        new_message = str(response.POST['message'])
+    if request.method == 'POST':
+        new_days_until_expiration = int(request.POST['days_until_expiration'])
+        new_message = str(request.POST['message'])
         reminder.days_until_expiration = new_days_until_expiration
         reminder.message = new_message
         reminder.save()
-        return HttpResponse("You will get the message '%s' %s days before expiration" % (reminder.message, reminder.days_until_expiration))
+        if request.user.is_authenticated:
+            return redirect('home')
+        return redirect('login')
         
     template = loader.get_template('reminder/settings.html')
     context = {
                 'form': settingInput,
                 'reminder': reminder
             }
-    return HttpResponse(template.render(context, response))
+    
+    return HttpResponse(template.render(context, request))
 
 def signup(request):
     if request.method == 'POST':
