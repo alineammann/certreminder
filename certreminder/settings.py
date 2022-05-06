@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django_crontab',
+    'rest_framework',
 ]
 
 AUTH_USER_MODEL = 'reminder.CustomUser'
@@ -82,7 +83,7 @@ DATABASES = {
         'NAME': 'reminderdb',
         'USER': 'postgres', #Spielt eine Rolle welcher User für Deployment?
         'PASSWORD': 'sml12345',
-        'HOST': 'db',
+        'HOST': '127.0.0.1',
         'PORT': '5432',
     }
 }
@@ -140,3 +141,11 @@ EMAIL_HOST = 'smpt.gmail.com'
 EMAIL_PORT = 587
 EMAIL_HOST_USER = 'revosie144@gmail.com'
 EMAIL_HOST_PASSWORD = 'sml12345'
+
+REST_FRAMEWORK = {
+    # Use Django's standard 'django.contrib.auth' permissions, 
+    # or allow read-only access for unauthenticated users
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly'
+    ]
+}

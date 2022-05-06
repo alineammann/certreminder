@@ -1,3 +1,4 @@
+from reminder.serializers import CertificateSerializer
 from .MailManager import send_email
 from django.utils.http import urlsafe_base64_encode
 from django.utils.encoding import force_bytes
@@ -14,6 +15,15 @@ from django.contrib.auth.forms import PasswordResetForm
 from django.contrib.auth.tokens import default_token_generator
 from django.template.loader import render_to_string
 from django.db.models.query_utils import Q
+from rest_framework import viewsets
+from .serializers import CertificateSerializer, ReminderSerializer, CustomUserSerializer
+
+""" Using JsonResponse, serializers and csrf_exempt for RestAPI 
+    - https://medium.com/geekculture/building-django-api-views-without-django-rest-framework-4fa9883de0a8
+    - https://dev.to/alexmercedcoder/creating-a-restful-api-with-django-without-djangorestframework-17n7
+    
+    Alternative: Partitially implement django rest framework functions
+"""
 
 def index(request):
     return HttpResponse("Index Page")
@@ -178,6 +188,23 @@ def delete_reminder(request, reminderId):
     r = Reminder.objects.get(id=reminderId)
     r.delete()
     return redirect('home')
+
+
+
+
+
+
+class CertificateViewSet(viewsets.ModelViewSet):
+    queryset = Certificate.objects.all().order_by('common_name')
+    serializer_class = CertificateSerializer
+
+class ReminderViewSet(viewsets.ModelViewSet):
+    queryset = Reminder.objects.all().order_by('email')
+    serializer_class = ReminderSerializer
+
+class CustomUserViewSet(viewsets.ModelViewSet):
+    queryset = CustomUser.objects.all().order_by('email')
+    serializer_class = CustomUserSerializer
 
 # Django specific testing tools
 # Pytest-django: Is a plugin for pytest that provides a set of tools for testing django applications and projects
