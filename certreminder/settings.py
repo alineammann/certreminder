@@ -82,7 +82,7 @@ DATABASES = {
         'NAME': 'reminderdb',
         'USER': 'postgres', #Spielt eine Rolle welcher User für Deployment?
         'PASSWORD': 'sml12345',
-        'HOST': '127.0.0.1',
+        'HOST': 'db',
         'PORT': '5432',
     }
 }
