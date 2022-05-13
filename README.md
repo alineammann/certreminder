@@ -1,2 +1,2 @@
 # certreminder
-Certreminder is a Webapplication created with django. It enables users to upload a X509 Certificate and configure a reminder that will be sent to the users email certain days before the certificate expiration.
+Certreminder is a webapplication created with django. It enables users to upload a X509 certificate and configure a reminder that will be sent by email to the user certain days before the certificate expires.
