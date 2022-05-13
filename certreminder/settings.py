@@ -143,3 +143,12 @@ EMAIL_HOST = 'smpt.gmail.com'
 EMAIL_PORT = 587
 EMAIL_HOST_USER = str(os.environ.get('EMAIL_HOST_USER'))
 EMAIL_HOST_PASSWORD = str(os.environ.get('EMAIL_HOST_PASSWORD'))
+
+
+REST_FRAMEWORK = {
+    # Use Django's standard 'django.contrib.auth' permissions, 
+    # or allow read-only access for unauthenticated users
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly'
+    ]
+}
