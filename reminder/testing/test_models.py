@@ -2,6 +2,7 @@ import datetime
 import email
 from ftplib import MSG_OOB
 from django.test import TestCase
+from reminder.MailManager import send_email
 from reminder.models import Reminder, Certificate
 import uuid
 
@@ -26,7 +27,7 @@ class ReminderTestCase(TestCase):
     def setUp(self):
         c = Certificate.objects.create(common_name="Reminder Test", serialnumber = "123", expiration_date=datetime.date(2030, 2, 23), uid = uuid.uuid4())
         r = Reminder.objects.create(certificate = c, email = "remindertest@email.com", message = "Test message", days_until_expiration = 20)
-        self.msg = r.send_email('TestCase', 'This is a test email', [r.email])
+        self.msg = send_email('TestCase', 'This is a test email', [r.email])
 
     def test_send_email_from(self):
         msg = self.msg

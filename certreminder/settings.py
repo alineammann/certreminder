@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/3.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.2/ref/settings/
 """
-
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -20,12 +20,14 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-8^c-p)*x4_05(#t#)l!-#(9_fkvja8(c%o4)i_im%-6+#vh5qb'
+SECRET_KEY = str(os.environ.get('SECRET_KEY'))
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = str(os.environ.get('DEBUG')) == '1' # 1 == True
 
 ALLOWED_HOSTS = []
+if not DEBUG:
+    ALLOWED_HOSTS += [os.environ.get('ALLOWED_HOST')]
 
 
 # Application definition
@@ -79,11 +81,11 @@ WSGI_APPLICATION = 'certreminder.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'reminderdb',
-        'USER': 'postgres', #Spielt eine Rolle welcher User für Deployment?
-        'PASSWORD': 'sml12345',
-        'HOST': 'db',
-        'PORT': '5432',
+        'NAME': str(os.environ.get('DB_NAME')),
+        'USER': str(os.environ.get('DB_USER')), #Spielt eine Rolle welcher User für Deployment?
+        'PASSWORD': str(os.environ.get('DB_PASSWORD')),
+        'HOST': str(os.environ.get('DB_HOST')),
+        'PORT': str(os.environ.get('DB_PORT')),
     }
 }
 
@@ -138,5 +140,5 @@ DEFAULT_FROM_EMAIL = 'revosie144@gmail.com'
 EMAIL_USE_TLS = True
 EMAIL_HOST = 'smpt.gmail.com'
 EMAIL_PORT = 587
-EMAIL_HOST_USER = 'revosie144@gmail.com'
-EMAIL_HOST_PASSWORD = 'sml12345'
+EMAIL_HOST_USER = str(os.environ.get('EMAIL_HOST_USER'))
+EMAIL_HOST_PASSWORD = str(os.environ.get('EMAIL_HOST_PASSWORD'))

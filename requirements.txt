@@ -5,6 +5,8 @@ click==8.0.4
 cryptography==36.0.1
 Django==3.2.1
 django-crontab==0.7.1
+django-dotenv==1.4.2
+djangorestframework==3.13.1
 mypy-extensions==0.4.3
 pathspec==0.9.0
 platformdirs==2.5.1
