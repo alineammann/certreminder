@@ -1,13 +1,7 @@
 import datetime
-from email.mime import application
 from http import HTTPStatus
-from http.client import responses
-import json
 import uuid
-from django.forms import EmailField
-from django.http import HttpRequest, HttpResponse
 from django.test import TestCase, Client
-from reminder.forms import EmailInput
 from reminder.models import Certificate, CustomUser, Reminder
 
 class GetViewTestCase(TestCase):
@@ -41,9 +35,9 @@ class GetViewTestCase(TestCase):
 
 class PostViewTestCase(TestCase):
     def setUp(self):
-        c = Certificate.objects.create(common_name="Post View Test", serialnumber="123", expiration_date=datetime.date(2030, 2, 23), uid=uuid.uuid4())
-        u = CustomUser.objects.create(email="postviewtest@email.com", password="sml12345")
-        r = Reminder.objects.create(certificate = c, email = "postviewtest@email.com", message = "Test message", days_until_expiration = 20, user = u)
+        self.certificate = Certificate.objects.create(common_name="Post View Test", serialnumber="123", expiration_date=datetime.date(2030, 2, 23), uid=uuid.uuid4())
+        self.user = CustomUser.objects.create(email="postviewtest@email.com", password="sml12345")
+        self.reminder = Reminder.objects.create(certificate = self.certificate, email = "postviewtest@email.com", message = "Test message", days_until_expiration = 20, user = self.user)
 
     def test_post_index_view(self):
         cli = Client()
@@ -55,11 +49,24 @@ class PostViewTestCase(TestCase):
         )
 
     def test_post_show_view(self):
-            c = Certificate.objects.filter(common_name = 'Post View Test').first()
-            cli = Client()
-            cli.user = CustomUser.objects.filter(email="postviewtest@email.com").first()
-            cli.login(email="postviewtest@email.com", password="sml12345")
-            response = cli.post(f'/reminder/certificate/{c.uid}', data={'email': "postviewtest@email.com"}, content_type="multipart/form-data", follow=True)
-            self.assertEqual(
-                response.status_code, HTTPStatus.OK
-            )
+        c = self.certificate
+        cli = Client()
+        cli.user = self.user
+        cli.login(email="postviewtest@email.com", password="sml12345")
+        response = cli.post(f'/reminder/certificate/{c.uid}', data={'email': "postviewtest@email.com"},  follow=True)
+        self.assertEqual(
+            response.status_code, HTTPStatus.OK
+        )
+    
+    def test_post_settings_view(self):
+        c = self.certificate
+        r = self.reminder
+        cli = Client()
+        cli.post(f'/reminder/certificate/{c.uid}/settings', data={'days_until_expiration': 5, 'message': 'Post View Test Case'}, follow=True)
+        r.refresh_from_db()
+        self.assertNotEqual(
+            r.days_until_expiration, 20
+        )
+        self.assertNotEqual(
+            r.message, "Test message"
+        )
