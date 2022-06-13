@@ -1,5 +1,4 @@
 import datetime
-import email
 from ftplib import MSG_OOB
 from django.test import TestCase
 from reminder.MailManager import send_email
@@ -16,7 +15,6 @@ class CertificateTestCase(TestCase):
         
         self.assertTrue(expired.is_expired())
         
-
     def test_if_expired_false(self):
         valid = Certificate.objects.get(common_name = "valid")
 
