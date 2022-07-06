@@ -28,12 +28,11 @@ DEBUG = str(os.environ.get('DEBUG')) == '1' # 1 == True
 
 ALLOWED_HOSTS = []
 if not DEBUG:
-    ALLOWED_HOSTS += [os.environ.get('ALLOWED_HOST')]
+    ALLOWED_HOSTS += [os.environ.get('ALLOWED_HOST').split(',')]
 
 # Application definition
 
 INSTALLED_APPS = [
-    'reminder.apps.ReminderConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -42,11 +41,14 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django_crontab',
     'rest_framework',
+    'reminder.apps.ReminderConfig',
+    'corsheaders',
 ]
 
 AUTH_USER_MODEL = 'reminder.CustomUser'
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -152,3 +154,20 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly'
     ]
 }
+
+CORS_ALLOWED_ORIGINS = [
+    'http://localhost:4200',
+    'http://127.0.0.1:8000',
+]
+
+CSRF_TRUSTED_ORIGINS = [
+    'http://localhost:4200',
+]
+
+CORS_ALLOW_METHODS = [
+    "DELETE",
+    "GET",
+    "PATCH",
+    "POST",
+    "PUT",
+]

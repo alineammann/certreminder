@@ -1,29 +1,21 @@
-from enum import unique
-from multiprocessing.sharedctypes import Value
-from time import strftime
 from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.base_user import BaseUserManager
-from django.contrib.postgres.fields import ArrayField
 from django.db import models
 from datetime import datetime, date
-from django.core.mail import EmailMessage
 import datetime
 import uuid
 
 # Create your models here.
 class Certificate(models.Model):
-    common_name = models.CharField(max_length=255, editable=False)
-    serialnumber = models.CharField(max_length=100, editable=False)
-    expiration_date = models.DateField(default=datetime.date.today, editable=False)
-    uid = models.UUIDField(default=uuid.uuid4, editable=False)
+    common_name = models.CharField(max_length=255)
+    serialnumber = models.CharField(max_length=100)
+    expiration_date = models.DateField(default=datetime.date.today)
+    uid = models.UUIDField(default=uuid.uuid4)
     def save(self, *args, **kw):
-        uid = uuid.uuid4()
-        uid_exists = Certificate.objects.filter(uid=uid).exists()
-        while uid_exists == True:
-            uid = uuid.uuid4()
-            uid_exists = Certificate.objects.filter(uid=uid).exists()
-        self.uid = uid
+        if self.uid is None:
+            self.uid = uuid.uuid4()
         return super(Certificate, self).save(*args,**kw)
+
     def is_expired(self):
         today = date.today()
         if self.expiration_date < today:
@@ -68,7 +60,7 @@ class CustomUser(AbstractUser):
     objects = CustomUserManager()
 
     def __str__(self):
-        return self.last_login
+        return self.email
 
 class Reminder(models.Model):
     certificate = models.ForeignKey(Certificate, on_delete=models.CASCADE)

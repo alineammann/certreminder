@@ -1,9 +1,13 @@
+from http import HTTPStatus
+import json
+
+from django.forms import model_to_dict
 from reminder.serializers import CertificateSerializer
 from .MailManager import send_email
 from django.utils.http import urlsafe_base64_encode
 from django.utils.encoding import force_bytes
 from django.shortcuts import redirect, render
-from django.http import BadHeaderError, HttpResponse
+from django.http import BadHeaderError, HttpResponse, JsonResponse
 from .models import Certificate, Reminder, CustomUser
 from .forms import EmailInput, PemUpload, SettingInput, SignUpForm, LogInForm
 from cryptography import x509
@@ -16,7 +20,10 @@ from django.contrib.auth.tokens import default_token_generator
 from django.template.loader import render_to_string
 from django.db.models.query_utils import Q
 from rest_framework import viewsets
+from rest_framework.permissions import AllowAny
+from rest_framework.response import Response
 from .serializers import CertificateSerializer, ReminderSerializer, CustomUserSerializer
+from reminder import serializers
 
 """ Using JsonResponse, serializers and csrf_exempt for RestAPI 
     - https://medium.com/geekculture/building-django-api-views-without-django-rest-framework-4fa9883de0a8
@@ -43,7 +50,9 @@ def upload_certificate(request):
             ed = ed_dt.strftime("%Y-%m-%d")
             certificate = Certificate.objects.create(common_name = cn, serialnumber = sn, expiration_date = ed)
             certificate.save()
+            
             return redirect('show_certificate', certUid = certificate.uid)
+            
         except Exception as e:
             error = str(e)
     return render(request, 'reminder/upload.html', {'form':form, 'error':error})
@@ -190,28 +199,124 @@ def delete_reminder(request, reminderId):
     return redirect('home')
 
 
+from rest_framework.views import APIView
+from rest_framework import status
 
 
+class CertificateListAPIView(APIView):
+    permission_classes = [AllowAny]
 
+    # Create a new Certificate object with the given data
+    def post(self, request, format=None):
+        serializer = CertificateSerializer(data=request.data)
+        if serializer.is_valid():
+           serializer.save()
+           return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    def get(self, request, pk, format=None):
+        print("API GET")
 
-class CertificateViewSet(viewsets.ModelViewSet):
-    queryset = Certificate.objects.all().order_by('common_name')
-    serializer_class = CertificateSerializer
+class CertificateDetailAPIView(APIView):
+    permission_classes = [AllowAny]
 
-class ReminderViewSet(viewsets.ModelViewSet):
-    queryset = Reminder.objects.all().order_by('email')
-    serializer_class = ReminderSerializer
+    def get_object(self, cert_id):
+        try:
+            return Certificate.objects.get(id=cert_id)
+        except Certificate.DoesNotExist:
+            return None
 
-class CustomUserViewSet(viewsets.ModelViewSet):
-    queryset = CustomUser.objects.all().order_by('email')
-    serializer_class = CustomUserSerializer
+    def get(self, request, id, format=None):
+        certificate = self.get_object(id)
+        if not certificate:
+            return Response("An object with this id doesnt exist", status=status.HTTP_400_BAD_REQUEST)
+        serializer = CertificateSerializer(certificate)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
-# Django specific testing tools
-# Pytest-django: Is a plugin for pytest that provides a set of tools for testing django applications and projects
-# Django-Test-Plus: Useful additions to Dajngos default TestCase
-# Django-Test-Migrations: Test Django schema and data migrations, including migrations order and best practices
-# Django-Fungtest: Helpers for creating hîgh level functional tests in Django, with a unified API for WebTest and Selenium tests 
+    def delete(self, request, id, format=None):
+        certificate = self.get_object(id)
+        if not certificate:
+            return Response("An object with this id doesnt exist", status=status.HTTP_400_BAD_REQUEST)
+        certificate.delete()
+        return Response("Object deleted", status=status.HTTP_200_OK)
 
-# Not Django specific testing tools
-# Selenium(/Splinter): A browser automation framework and ecosystem
-# Hypothesis: Is a powerful, flexible and easy to use library for property-based testing
+class ReminderListAPIView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request, format=None):
+        serializer = ReminderSerializer(data=request.data, context={'request': request})
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    def get(self, request, format=None):
+        reminders = Reminder.objects.filter(user = request.user)
+        serializer = ReminderSerializer(reminders, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+class ReminderDetailAPIView(APIView):
+    permission_classes = [AllowAny]
+
+    def get_object(self, reminder_id):
+        try:
+            return Reminder.objects.get(id=reminder_id)
+        except Reminder.DoesNotExist:
+            return None
+
+    def get(self, request, id, format=None):
+        reminder = self.get_object(id)
+        if not reminder:
+            return Response("An object with this id doesnt exist", status=status.HTTP_400_BAD_REQUEST)
+        serializer = ReminderSerializer(reminder)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def put(self, request, id, format=None):
+        reminder = self.get_object(id)
+        if not reminder:
+            return Response("An object with this id doesnt exist", status=status.HTTP_400_BAD_REQUEST)
+        data = {
+            'days_until_expiration': request.data.get('days_until_expiration'),
+            'message': request.data.get('message')
+        }
+        serializer = ReminderSerializer(instance=reminder,data=data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, id, format=None):
+        reminder = self.get_object(id)
+        if not reminder:
+            return Response("An object with this id doesnt exist", status=status.HTTP_400_BAD_REQUEST)
+        reminder.delete()
+        return Response("Object deleted", status=status.HTTP_200_OK)
+
+#class ReminderViewSet(viewsets.ModelViewSet):
+#    queryset = Reminder.objects.all()
+#    serializer_class = ReminderSerializer
+#    permission_classes = [AllowAny]
+#
+#    def create(self, request, *args, **kwargs):
+#        try:
+#         body_unicode = request.body.decode('utf-8')
+#         body = json.loads(body_unicode)
+#         serializer = ReminderSerializer(data=body, context={'request': request})
+#         if serializer.is_valid():
+#             serializer.save()
+#             return JsonResponse(serializer.data)
+#     except Exception as e:
+#         return JsonResponse(e)
+
+# def partial_update(self, request, id=None, *args, **kwargs):
+#     try:
+#         id = kwargs.get('pk')
+#         instance = Reminder.objects.filter(pk=id).get()
+#         if not instance:
+#             return JsonResponse(status=HTTPStatus.NOT_FOUND)
+#         serializer = ReminderSerializer(instance=instance, data=request.data, context={'request': request}, partial=True)
+#         if serializer.is_valid():
+#             serializer.save()
+#             return JsonResponse(serializer.data)
+#     except Exception as e:
+#         return JsonResponse(e)
